@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:expense_tracker/models/expense.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/cupertino.dart';
+import 'dart:io';
 
 final formatter = DateFormat.yMd();
 
@@ -11,7 +15,6 @@ class NewExpense extends StatefulWidget {
   State<NewExpense> createState() {
     return _NewExpenseState();
   }
-  
 }
 
 class _NewExpenseState extends State<NewExpense> {
@@ -19,20 +22,26 @@ class _NewExpenseState extends State<NewExpense> {
   final _amountController = TextEditingController();
   DateTime? _selectedDate; 
   Category _selectedCategory = Category.leisure;
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _amountController.dispose();
-    super.dispose();
-  }
 
-  void _submitExpenseData(){
-    final enteredAmount = double.tryParse(_amountController.text);
-    final amountIsInvalid = enteredAmount ==null || enteredAmount<=0;
-    if(_titleController.text.trim().isEmpty || 
-      amountIsInvalid || _selectedDate == null)//run when an error happens
-    {
-      showDialog(
+  void _showDialog (){
+    if (Platform.isIOS){
+      showCupertinoDialog(
+          context: context, 
+          builder: (ctx) => CupertinoAlertDialog(
+            title: const Text("Invalid input!"),
+            content: const Text("Please make sure to have valid Title, Date, and Amount!"),
+            actions:[
+              TextButton(
+                onPressed: (){
+                Navigator.pop(ctx);
+              },
+              child: const Text("Okay!"),
+              ),
+            ]
+          )
+        );
+    } else {
+    showDialog(
         context: context, 
         builder: (ctx) => AlertDialog(
           title: const Text("Invalid input!"),
@@ -47,6 +56,23 @@ class _NewExpenseState extends State<NewExpense> {
           ]
         )
       );
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _submitExpenseData(){
+    final enteredAmount = double.tryParse(_amountController.text);
+    final amountIsInvalid = enteredAmount ==null || enteredAmount<=0;
+    if(_titleController.text.trim().isEmpty || 
+      amountIsInvalid || _selectedDate == null)//run when an error happens
+    {
+      _showDialog();
       return;
     }
     widget.onAddExpense(
@@ -76,6 +102,7 @@ class _NewExpenseState extends State<NewExpense> {
 
   @override
   Widget build(BuildContext context) {
+    //final keyboardSpace = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(16,48,16,16),
       child: Column (
